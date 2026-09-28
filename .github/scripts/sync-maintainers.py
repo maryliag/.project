@@ -37,7 +37,17 @@ TEAM_RULES = {
 
 
 def _collect(source: dict, section: str) -> set[str]:
-    return {entry["name"] for entry in source.get(section, []) or []}
+    if section not in source:
+        raise ValueError(f"upstream is missing required section: {section!r}")
+    entries = source[section]
+    if not isinstance(entries, list) or not entries:
+        raise ValueError(f"upstream section {section!r} is empty or not a list")
+    names: set[str] = set()
+    for i, entry in enumerate(entries):
+        if not isinstance(entry, dict) or "name" not in entry:
+            raise ValueError(f"upstream section {section!r} entry {i} is missing 'name'")
+        names.add(entry["name"])
+    return names
 
 
 def _render(source_path: Path, target_path: Path) -> tuple[str, str]:
